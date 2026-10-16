@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>称号を贈る</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f3f0; --surface:#fff; --ink:#151515; --sub:#6b6b6b; --line:#d9d7d2;
+  --accent:#151515; --accent-ink:#fff; --ok:#1f7a4d; --ng:#b3261e; --warn-bg:#fff5db; --warn:#7a5a00;
+  --radius:10px;
+  font-family:"Zen Kaku Gothic New",system-ui,-apple-system,"Hiragino Sans",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#121212; --surface:#1c1c1c; --ink:#f0efec; --sub:#9a9894; --line:#33322f;
+    --accent:#f0efec; --accent-ink:#121212; --warn-bg:#3a3010; --warn:#f2d27a; }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-weight:500;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+input,textarea{font:inherit;color:var(--ink);background:var(--surface)}
+.wrap{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+.wide{max-width:1040px}
+.bar{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:5}
+.bar b{font-weight:700}
+.pill{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--line);color:var(--sub)}
+.pill.on{background:#d8f0e3;color:var(--ok)} .pill.off{background:#f8dcd9;color:var(--ng)}
+@media (prefers-color-scheme:dark){.pill.on{background:#123524}.pill.off{background:#3d1714}}
+.muted{color:var(--sub);font-size:13px}
+.label{color:var(--sub);font-size:12px;letter-spacing:.06em}
+h1{font-size:28px;font-weight:700;margin:4px 0 2px;line-height:1.3}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.word{border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:14px 8px;font-size:15px;transition:.12s}
+.word:hover{border-color:var(--sub)}
+.word.sel{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.primary{width:100%;margin-top:20px;padding:15px;border:0;border-radius:var(--radius);background:var(--accent);color:var(--accent-ink);font-size:15px;font-weight:700}
+.primary:disabled{opacity:.4;cursor:default}
+.btn{white-space:nowrap;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:14px}
+.btn.dark{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:default}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.err{color:var(--ng);font-size:14px;margin-top:10px}
+.warn{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:10px 14px;font-size:14px;margin-top:12px}
+.sec{margin-top:24px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tabs button{border:0;background:none;padding:6px 12px;border-radius:6px;font-size:14px;color:var(--sub)}
+.tabs button.cur{background:var(--accent);color:var(--accent-ink)}
+.bars li{list-style:none}
+.bars button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:7px 8px;border-radius:6px;text-align:left;font-size:14px}
+.bars button:hover{background:var(--bg)}
+.bars button.pick{background:var(--accent);color:var(--accent-ink)}
+.bars .w{width:7.5em;flex-shrink:0}
+.bars .track{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bars .fill{display:block;height:100%;background:var(--sub)}
+.bars .top .fill{background:var(--ink)}
+.bars .pick .fill{background:var(--accent-ink)}
+.bars .n{width:2em;text-align:right;font-variant-numeric:tabular-nums}
+.big{font-size:40px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+textarea{width:100%;min-height:260px;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:13px;line-height:1.7}
+input[type=text],input[type=password]{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:14px}
+.spk{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;font-size:14px}
+.spk.cur{background:var(--bg);font-weight:700}
+.spk .no{width:2em;color:var(--sub);font-variant-numeric:tabular-nums}
+.spk .t{margin-left:auto;color:var(--sub);font-size:13px}
+.two{display:grid;gap:16px}
+@media(min-width:760px){.two{grid-template-columns:1fr 1fr}}
+
+/* ---- 表示画面 ---- */
+.stage{position:fixed;inset:0;background:#0b0b0b;color:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;text-align:center;padding:24px}
+.stage .glow{position:absolute;inset:-20%;background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.08),transparent 55%);pointer-events:none}
+.stage .tiny{letter-spacing:.3em;font-size:14px;color:#777}
+.stage .who{font-size:clamp(28px,4vw,48px);font-weight:700;margin-top:24px}
+.stage .meta{color:#999;margin-top:8px;font-size:clamp(14px,1.6vw,20px)}
+.stage .count{position:absolute;right:24px;bottom:20px;color:#555;font-size:14px;font-variant-numeric:tabular-nums}
+.avatar{display:block;margin:28px auto 0;width:clamp(120px,16vw,200px);height:clamp(120px,16vw,200px);border-radius:50%;object-fit:cover;border:3px solid #fff;background:#222}
+.avatar.ph{display:flex;align-items:center;justify-content:center;font-size:clamp(40px,5vw,64px);font-weight:700;color:#bbb;border-color:#444}
+.avatar.dim{opacity:.55}
+.title{position:relative;margin-top:36px;overflow:hidden;padding:8px 0}
+.title span{display:block;font-weight:900;font-size:clamp(44px,8vw,112px);line-height:1.12;letter-spacing:.02em}
+.flash{position:absolute;inset:0;background:#fff;pointer-events:none;z-index:3}
+.sweep{position:absolute;top:0;bottom:0;left:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);pointer-events:none}
+@keyframes inL{from{opacity:0;transform:translateX(-80px) skewX(-10deg)}to{opacity:1;transform:none}}
+@keyframes inR{from{opacity:0;transform:translateX(80px) skewX(10deg)}to{opacity:1;transform:none}}
+@keyframes pop{0%{opacity:0;transform:scale(1.4)}60%{opacity:1;transform:scale(.96)}100%{opacity:1;transform:scale(1)}}
+@keyframes flash{0%{opacity:0}12%{opacity:.85}100%{opacity:0}}
+@keyframes sweep{from{transform:translateX(-120%) skewX(-20deg)}to{transform:translateX(420%) skewX(-20deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.a-l{animation:inL .55s cubic-bezier(.16,1,.3,1) both}
+.a-r{animation:inR .55s cubic-bezier(.16,1,.3,1) both}
+.a-pop{animation:pop .5s cubic-bezier(.16,1,.3,1) both}
+.a-flash{animation:flash .7s ease-out both}
+.a-sweep{animation:sweep 1.1s .35s ease-in-out both}
+.a-rise{animation:rise .5s .2s ease-out both}
+.hide{opacity:0}
+@media (prefers-reduced-motion:reduce){.a-l,.a-r,.a-pop,.a-rise{animation:none;opacity:1;transform:none}.a-flash,.a-sweep{display:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(() => {
+  const $app = document.getElementById("app");
+  const path = location.pathname.replace(/\/+$/, "");
+  const VIEW = path === "/admin" ? "admin" : path === "/stage" ? "stage" : "audience";
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const store = {
+    get(k, area = localStorage) { try { return area.getItem(k); } catch { return null; } },
+    set(k, v, area = localStorage) { try { area.setItem(k, v); } catch { /* noop */ } },
+  };
+
+  let state = null;
+  let online = false;
+
+  // ---- WebSocket（切れたら自動で再接続） ----
+  function connect(role, pin, onMsg, onStatus) {
+    let ws, ping, retry = 0, stopped = false;
+    const open = () => {
+      const q = new URLSearchParams({ role });
+      if (pin) q.set("pin", pin);
+      ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/ws?${q}`);
+      ws.onopen = () => { retry = 0; onStatus(true); ping = setInterval(() => { try { ws.send("ping"); } catch {} }, 25000); };
+      ws.onmessage = (e) => { if (e.data === "pong") return; try { onMsg(JSON.parse(e.data)); } catch {} };
+      ws.onclose = (e) => {
+        clearInterval(ping); onStatus(false);
+        if (stopped) return;
+        if (e.code === 1008 || e.code === 4001) return;
+        setTimeout(open, Math.min(8000, 500 * 2 ** retry++));
+      };
+      ws.onerror = () => { try { ws.close(); } catch {} };
+    };
+    open();
+    return { stop() { stopped = true; try { ws.close(); } catch {} } };
+  }
+
+  const cur = () => (state ? state.speakers[state.index] : null);
+
+  // =================== 参加者 ===================
+  function audience() {
+    document.title = "称号を贈る";
+    let voter = store.get("shougou-voter");
+    if (!voter) { voter = crypto.randomUUID().slice(0, 12); store.set("shougou-voter", voter); }
+    const mine = {}; // speakerId -> {h,b}
+    let draft = { h: null, b: null }, draftFor = null, busy = false, error = "";
+
+    const loadMine = async () => {
+      try {
+        const r = await fetch(`/api/state?voter=${encodeURIComponent(voter)}`).then((r) => r.json());
+        state = r.state;
+        const c = cur();
+        if (c && r.mine) mine[c.id] = r.mine;
+        render();
+      } catch {}
+    };
+
+    const render = () => {
+      const c = cur();
+      if (!state || !c) { $app.innerHTML = `<div class="wrap"><p class="muted">接続しています…</p></div>`; return; }
+      if (draftFor !== c.id) { draftFor = c.id; draft = mine[c.id] ? { ...mine[c.id] } : { h: null, b: null }; error = ""; }
+      const sent = mine[c.id];
+      const title = state.titles[c.id];
+      const axis = (label, words, key) => `
+        <section class="sec"><div class="label">${label}</div>
+          <div class="grid2">${words.map((w, i) => `<button class="word ${draft[key] === i ? "sel" : ""}" data-k="${key}" data-i="${i}">${esc(w)}</button>`).join("")}</div>
+        </section>`;
+      let body = "";
+      if (state.phase === "voting") {
+        body = axis("どうつくった人に見えた？", state.how, "h") + axis("どういう存在に見えた？", state.being, "b") +
+          (error ? `<p class="err">${esc(error)}</p>` : "") +
+          `<button class="primary" id="send" ${busy ? "disabled" : ""}>${busy ? "送信中…" : sent ? "選び直して贈る" : "この2つを贈る"}</button>` +
+          (sent ? `<p class="muted" style="text-align:center;margin-top:12px">贈りました：<b>${esc(state.how[sent.h])}${esc(state.being[sent.b])}</b><br>締め切りまで選び直せます</p>` : "");
+      } else if (state.phase === "closed") {
+        body = `<div class="card sec muted">締め切りました。集計しています…</div>`;
+      } else if (title) {
+        body = `<div class="card sec"><div class="label">贈られた称号</div><div style="font-size:28px;font-weight:900;margin-top:6px">${esc(state.how[title.h])}${esc(state.being[title.b])}</div></div>`;
+      }
+      $app.innerHTML = `
+        <div class="bar"><b>称号を贈る</b><span class="pill ${online ? "on" : "off"}">${online ? "接続中" : "再接続中"}</span>
+          <span class="muted" style="margin-left:auto">${state.index + 1} / ${state.speakers.length}</span></div>
+        <div class="wrap">
+          <div class="label">いま発表中</div>
+          <h1>${esc(c.name)}</h1>
+          <div class="muted">${esc(c.campus)}　${esc(c.product)}</div>
+          ${body}
+        </div>`;
+      $app.querySelectorAll(".word").forEach((el) => el.onclick = () => { draft[el.dataset.k] = Number(el.dataset.i); error = ""; render(); });
+      const send = document.getElementById("send");
+      if (send) send.onclick = submit;
+    };
+
+    const submit = async () => {
+      const c = cur();
+      if (draft.h === null || draft.b === null) { error = "2つとも選んでください"; render(); return; }
+      busy = true; render();
+      try {
+        const r = await fetch("/api/vote", { method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ voter, speakerId: c.id, h: draft.h, b: draft.b }) }).then((r) => r.json());
+        if (r.ok) mine[c.id] = r.mine; else error = r.error || "送信できませんでした";
+      } catch { error = "送信できませんでした。もう一度お試しください"; }
+      busy = false; render();
+    };
+
+    connect("viewer", null, (m) => {
+      if (m.type !== "state") return;
+      const prevId = cur()?.id;
+      state = m.state;
+      if (cur()?.id !== prevId) loadMine(); else render();
+    }, (on) => { online = on; if (on) loadMine(); else render(); });
+    render();
+  }
+
+  // =================== 運営 ===================
+  function admin() {
+    document.title = "称号投票｜運営";
+    let pin = store.get("shougou-pin", sessionStorage) || "";
+    let tally = null, pick = { h: null, b: null }, pickFor = null, tab = "run", msg = "", busy = false, conn = null;
+
+    const api = async (action, payload) => {
+      busy = true; msg = ""; render();
+      try {
+        const r = await fetch("/api/admin", { method: "POST", headers: { "content-type": "application/json", "x-admin-pin": pin },
+          body: JSON.stringify({ action, payload }) }).then((r) => r.json());
+        if (!r.ok) msg = r.error || "失敗しました";
+        busy = false; render();
+        return r.ok;
+      } catch { msg = "通信に失敗しました"; busy = false; render(); return false; }
+    };
+
+    const login = async (p) => {
+      const r = await fetch("/api/admin/tally", { headers: { "x-admin-pin": p } });
+      if (r.ok) {
+        pin = p; store.set("shougou-pin", p, sessionStorage);
+        conn = connect("admin", pin, (m) => {
+          if (m.type === "state") state = m.state;
+          if (m.type === "tally") tally = m.tally;
+          render();
+        }, (on) => { online = on; render(); });
+        render();
+      } else {
+        const j = await r.json().catch(() => ({}));
+        gate(j.error || "合言葉が違います");
+      }
+    };
+
+    const gate = (err = "") => {
+      $app.innerHTML = `<div class="wrap" style="max-width:360px;padding-top:80px">
+        <div class="label">運営画面</div><h1>合言葉を入力</h1>
+        <input type="password" id="pin" placeholder="合言葉" style="margin-top:16px" autofocus>
+        <button class="primary" id="go">開く</button>${err ? `<p class="err">${esc(err)}</p>` : ""}</div>`;
+      const go = () => login(document.getElementById("pin").value.trim());
+      document.getElementById("go").onclick = go;
+      document.getElementById("pin").onkeydown = (e) => e.key === "Enter" && go();
+    };
+
+    const topIdx = (counts) => { const max = Math.max(0, ...counts); return { max, idx: max ? counts.map((n, i) => (n === max ? i : -1)).filter((i) => i >= 0) : [] }; };
+
+    const bars = (label, words, counts, top, key, locked) => {
+      const max = Math.max(1, top.max);
+      const rows = words.map((w, i) => ({ w, i, n: counts[i] ?? 0 })).sort((a, b) => b.n - a.n);
+      return `<div class="card"><div class="label">${label}</div><ul class="bars" style="padding:0;margin:10px 0 0">
+        ${rows.map(({ w, i, n }) => `<li><button data-k="${key}" data-i="${i}" ${locked ? "disabled" : ""}
+          class="${top.idx.includes(i) ? "top" : ""} ${!locked && pick[key] === i ? "pick" : ""}">
+          <span class="w">${esc(w)}</span><span class="track"><span class="fill" style="width:${(n / max) * 100}%"></span></span><span class="n">${n}</span></button></li>`).join("")}
+      </ul></div>`;
+    };
+
+    const render = () => {
+      if (!conn) return gate();
+      const c = cur();
+      if (!state || !c) { $app.innerHTML = `<div class="wrap"><p class="muted">接続しています…</p></div>`; return; }
+      const t = tally && tally.speakerId === c.id ? tally : { how: [], being: [], total: 0 };
+      const th = topIdx(t.how), tb = topIdx(t.being);
+      if (pickFor !== `${c.id}:${state.phase}`) { pickFor = `${c.id}:${state.phase}`; pick = { h: null, b: null }; }
+      // 未選択なら最多票を初期選択（集計が状態より後に届いても埋まる）
+      if (pick.h === null && th.idx.length) pick.h = th.idx[0];
+      if (pick.b === null && tb.idx.length) pick.b = tb.idx[0];
+      const phaseLabel = { voting: "受付中", closed: "締切済", revealed: "表示済" }[state.phase];
+      const head = `<div class="bar"><b>称号投票｜運営</b><span class="pill ${online ? "on" : "off"}">${online ? "同期中" : "再接続中"}</span>
+        <div class="tabs">${[["run", "進行"], ["speakers", "登壇者"], ["vocab", "語彙"]].map(([k, l]) => `<button data-tab="${k}" class="${tab === k ? "cur" : ""}">${l}</button>`).join("")}</div></div>`;
+      let body = "";
+
+      if (tab === "run") {
+        const thin = t.total < 5, tied = th.idx.length > 1 || tb.idx.length > 1;
+        const locked = state.phase === "voting";
+        body = `
+          <div class="row" style="align-items:flex-end">
+            <div><div class="label">${state.index + 1} / ${state.speakers.length} 人目・${phaseLabel}</div>
+              <h1>${esc(c.name)}</h1><div class="muted">${esc(c.campus)}　${esc(c.product)}</div></div>
+            <div style="margin-left:auto;text-align:right"><div class="label">投票数</div><div class="big">${t.total}</div></div>
+          </div>
+          <div class="row sec">
+            <button class="btn dark" data-act="close" ${busy || state.phase !== "voting" ? "disabled" : ""}>投票を締め切る</button>
+            <button class="btn dark" data-act="reveal" ${busy || state.phase === "voting" || pick.h === null || pick.b === null ? "disabled" : ""}>${state.phase === "revealed" ? "称号をもう一度表示" : "称号を表示する"}</button>
+            <button class="btn" data-act="next" ${busy || state.index >= state.speakers.length - 1 ? "disabled" : ""}>次の登壇者へ →</button>
+            <button class="btn" data-act="prev" ${busy || state.index === 0 ? "disabled" : ""}>← 前へ</button>
+            ${state.phase !== "voting" ? `<button class="btn" data-act="reopen" ${busy ? "disabled" : ""}>受付を再開</button>` : ""}
+          </div>
+          ${msg ? `<p class="err">${esc(msg)}</p>` : ""}
+          ${!locked && thin ? `<div class="warn">票が ${t.total} 件しかありません。下のリストから運営の判断で選べます。</div>` : ""}
+          ${!locked && tied && !thin ? `<div class="warn">同率1位があります。下のリストから選んでください。</div>` : ""}
+          ${locked ? `<p class="muted" style="margin-top:12px">締め切ると、下のリストで称号を選び直せます（最多票が初期選択）。</p>` : ""}
+          <div class="two sec">${bars("どうつくった人か", state.how, t.how, th, "h", locked)}${bars("どういう存在か", state.being, t.being, tb, "b", locked)}</div>
+          <div class="two sec">
+            <div class="card"><div class="label">表示される称号</div>
+              <div style="font-size:26px;font-weight:900;margin-top:6px">${pick.h !== null && pick.b !== null ? esc(state.how[pick.h] + state.being[pick.b]) : "—"}</div></div>
+            <div class="card"><div class="label">この登壇者の顔写真URL</div>
+              <div class="row" style="margin-top:8px;flex-wrap:nowrap"><input type="text" id="photo" value="${esc(c.photo)}" placeholder="https://...">
+              <button class="btn" id="savePhoto">保存</button></div></div>
+          </div>
+          <div class="sec card"><div class="label">画面のURL</div>
+            <div class="muted" style="margin-top:6px;line-height:1.9">
+              参加者用：<b>${esc(location.origin)}/</b>（Zoomのチャットに貼る）<br>
+              表示用：<b>${esc(location.origin)}/stage</b>（画面共有するPCで開く）</div></div>`;
+      }
+
+      if (tab === "speakers") {
+        const lines = state.speakers.map((s) => [s.name, s.campus, s.product, s.photo].join(",").replace(/,+$/, "")).join("\n");
+        body = `
+          <div class="two">
+            <div>
+              <div class="label">発表順（クリックでその人に移動）</div>
+              <div style="margin-top:8px">${state.speakers.map((s, i) => `<div class="spk ${i === state.index ? "cur" : ""}">
+                <span class="no">${i + 1}</span><button class="btn" data-goto="${i}" style="padding:4px 10px">${esc(s.name)}</button>
+                <span class="muted">${esc(s.campus)}</span>${s.photo ? `<span class="muted">📷</span>` : ""}
+                <span class="t">${state.titles[s.id] ? esc(state.how[state.titles[s.id].h] + state.being[state.titles[s.id].b]) : ""}</span></div>`).join("")}</div>
+              <button class="btn sec" data-act="shuffle" ${busy ? "disabled" : ""}>発表順をシャッフル</button>
+            </div>
+            <div>
+              <div class="label">登壇者リストを編集</div>
+              <p class="muted">1行1人。「名前,クラス,プロダクト名,写真URL」の順（写真URLは省略可）。スプレッドシートからの貼り付け（タブ区切り）もOK。同じ名前の人は称号と写真が引き継がれます。</p>
+              <textarea id="list">${esc(lines)}</textarea>
+              <button class="btn dark" id="saveList" style="margin-top:8px" ${busy ? "disabled" : ""}>リストを保存</button>
+              ${msg ? `<p class="err">${esc(msg)}</p>` : ""}
+            </div>
+          </div>
+          <div class="sec card"><div class="label">リハーサル後のリセット</div>
+            <p class="muted">すべての票と称号を消して、1人目に戻します。登壇者と語彙は残ります。</p>
+            <button class="btn" id="reset" ${busy ? "disabled" : ""}>票と称号をすべて消す</button></div>`;
+      }
+
+      if (tab === "vocab") {
+        body = `
+          <p class="muted">1行に1語。保存すると<b>それまでの票と称号は消えます</b>（語の並びが変わると集計がずれるため）。本番前に確定させてください。</p>
+          <div class="two sec">
+            <div><div class="label">どうつくった人か（前半）</div><textarea id="how">${esc(state.how.join("\n"))}</textarea></div>
+            <div><div class="label">どういう存在か（後半）</div><textarea id="being">${esc(state.being.join("\n"))}</textarea></div>
+          </div>
+          <button class="btn dark sec" id="saveVocab" ${busy ? "disabled" : ""}>語彙を保存</button>
+          ${msg ? `<p class="err">${esc(msg)}</p>` : ""}`;
+      }
+
+      $app.innerHTML = head + `<div class="wrap wide">${body}</div>`;
+
+      $app.querySelectorAll("[data-tab]").forEach((el) => el.onclick = () => { tab = el.dataset.tab; msg = ""; render(); });
+      $app.querySelectorAll("[data-act]").forEach((el) => el.onclick = () => {
+        const a = el.dataset.act;
+        if (a === "shuffle" && !confirm("発表順をシャッフルして1人目に戻します。よろしいですか？")) return;
+        api(a, a === "reveal" ? { h: pick.h, b: pick.b } : {});
+      });
+      $app.querySelectorAll(".bars button").forEach((el) => el.onclick = () => { pick[el.dataset.k] = Number(el.dataset.i); render(); });
+      $app.querySelectorAll("[data-goto]").forEach((el) => el.onclick = () => api("goto", { index: Number(el.dataset.goto) }));
+      const sp = document.getElementById("savePhoto");
+      if (sp) sp.onclick = () => api("setPhoto", { id: c.id, photo: document.getElementById("photo").value });
+      const sl = document.getElementById("saveList");
+      if (sl) sl.onclick = () => {
+        const speakers = document.getElementById("list").value.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => {
+          const [name, campus = "", product = "", photo = ""] = l.split(l.includes("\t") ? "\t" : ",").map((x) => x.trim());
+          return { name, campus, product, photo };
+        });
+        api("setSpeakers", { speakers });
+      };
+      const rs = document.getElementById("reset");
+      if (rs) rs.onclick = () => confirm("すべての票と称号を消します。元に戻せません。よろしいですか？") && api("resetVotes");
+      const sv = document.getElementById("saveVocab");
+      if (sv) sv.onclick = () => {
+        if (!confirm("語彙を保存すると、これまでの票と称号は消えます。よろしいですか？")) return;
+        const split = (id) => document.getElementById(id).value.split("\n").map((x) => x.trim()).filter(Boolean);
+        api("setVocab", { how: split("how"), being: split("being") });
+      };
+    };
+
+    if (pin) login(pin); else gate();
+  }
+
+  // =================== 表示 ===================
+  function stage() {
+    document.title = "称号｜表示";
+    let shownSeq = null, step = 0, timers = [];
+    const avatar = (c, dim) => c.photo
+      ? `<img class="avatar ${dim ? "dim" : ""}" src="${esc(c.photo)}" alt="">`
+      : `<div class="avatar ph ${dim ? "dim" : ""}">${esc(c.name.slice(0, 1))}</div>`;
+
+    const render = () => {
+      const c = cur();
+      if (!state || !c) { $app.innerHTML = `<div class="stage"><div class="tiny">CONNECTING…</div></div>`; return; }
+      const title = state.titles[c.id];
+      const revealed = state.phase === "revealed" && title;
+      const count = `<div class="count">${state.index + 1} / ${state.speakers.length}${online ? "" : "　・再接続中"}</div>`;
+      if (!revealed) {
+        $app.innerHTML = `<div class="stage"><div class="glow"></div><div>
+          <div class="tiny">NOW PRESENTING</div>${avatar(c, true)}
+          <div class="who">${esc(c.name)}</div><div class="meta">${esc(c.campus)}</div><div class="meta">${esc(c.product)}</div>
+          <div class="tiny" style="margin-top:56px">${state.phase === "voting" ? "称号を受付中" : "集計中"}</div></div>${count}</div>`;
+        return;
+      }
+      const s = (n, cls) => (step >= n ? cls : "hide");
+      $app.innerHTML = `<div class="stage"><div class="glow"></div>
+        ${step >= 2 ? `<div class="flash a-flash"></div>` : ""}
+        <div style="position:relative;z-index:2;width:100%;max-width:1100px">
+          <div class="${s(1, "a-pop")}">${avatar(c, false)}</div>
+          <div class="meta ${s(1, "a-rise")}" style="letter-spacing:.2em">${esc(c.campus)}</div>
+          <div class="who ${s(1, "a-rise")}" style="margin-top:4px">${esc(c.name)}</div>
+          <div class="title">${step >= 3 ? `<span class="sweep a-sweep"></span>` : ""}
+            <span class="${s(2, "a-l")}">${esc(state.how[title.h])}</span>
+            <span class="${s(3, "a-r")}">${esc(state.being[title.b])}</span></div>
+          <div class="meta ${s(3, "a-rise")}" style="margin-top:28px">${esc(c.product)}</div>
+        </div>${count}</div>`;
+    };
+
+    const play = () => {
+      timers.forEach(clearTimeout); timers = [];
+      step = 1; render();
+      timers.push(setTimeout(() => { step = 2; render(); }, 700));
+      timers.push(setTimeout(() => { step = 3; render(); }, 1250));
+    };
+
+    connect("viewer", null, (m) => {
+      if (m.type !== "state") return;
+      state = m.state;
+      const c = cur();
+      const revealed = state.phase === "revealed" && c && state.titles[c.id];
+      if (shownSeq === null) { // 最初の受信：開き直したときは演出なしで今の状態を出す
+        shownSeq = state.revealSeq;
+        step = revealed ? 3 : 0;
+        render();
+      } else if (revealed && shownSeq !== state.revealSeq) {
+        shownSeq = state.revealSeq;
+        play();
+      } else {
+        if (!revealed) step = 0;
+        render();
+      }
+    }, (on) => { online = on; render(); });
+    render();
+  }
+
+  ({ audience, admin, stage })[VIEW]();
+})();
+</script>
+</body>
+</html>
