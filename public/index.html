@@ -253,7 +253,9 @@ input[type=text],input[type=password]{width:100%;border:1px solid var(--line);bo
         <button class="primary" id="go">開く</button>${err ? `<p class="err">${esc(err)}</p>` : ""}</div>`;
       const go = () => login(document.getElementById("pin").value.trim());
       document.getElementById("go").onclick = go;
-      document.getElementById("pin").onkeydown = (e) => e.key === "Enter" && go();
+      document.getElementById("pin").addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.isComposing) go();
+      });
     };
 
     const topIdx = (counts) => { const max = Math.max(0, ...counts); return { max, idx: max ? counts.map((n, i) => (n === max ? i : -1)).filter((i) => i >= 0) : [] }; };
